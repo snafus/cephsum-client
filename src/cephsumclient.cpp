@@ -52,10 +52,14 @@ bool answer_challenge(int sock, const std::string & authkey) {
     // result = HMAC(EVP_md5(), authkey.c_str(), authkey.size(), data, datalen, result, &resultlen);
     ssize_t rc = send(sock, result, resultlen, 0);
     if (rc < 0) {
-        
+        std::cerr << "Read Error at Challenge send: " << valread <<std::endl;
     }
-    #warning
+
     valread = read(sock, buffer, CHALLENGE_LENGTH);
+    if (valread <= 0) {
+            std::cerr << "Read Error at Challenge welcome: " << valread <<std::endl;
+            return false;
+    }
 
     std::string resp(buffer, 9);
 
@@ -84,7 +88,7 @@ bool msg_send(int sock, rapidjson::Document & d) {
     data[1] = (mlen >> 16) & 0xFF;
     data[2] = (mlen >>  8) & 0xFF;
     data[3] = (mlen >>  0) & 0xFF;
-    std::clog << msg << std::endl;
+    // std::clog << msg << std::endl;
     ssize_t rc = send(sock, data, mlen+4, 0);
     if (rc < 0) {
         std::cerr << "Error on send: " << rc << std::endl;
@@ -153,9 +157,8 @@ bool connect(const std::string & host, int port, int& sock, int& client_fd) {
         return false;
     }
 
-    #warning
     struct timeval timeout;      
-    timeout.tv_sec = 10;
+    timeout.tv_sec = 20;
     timeout.tv_usec = 1000;
 
     if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout,
@@ -245,10 +248,10 @@ Options argparse(int argc, char* argv[]) {
             continue;
         }
 
-        if ((args[i] == "--port") ){
-            options.m_port =  stoi(args[++i]);
-            continue;
-        }
+        // if ((args[i] == "--port") ){
+        //     options.m_port =  stoi(args[++i]);
+        //     continue;
+        // }
         if ((args[i] == "--host") ){
             options.m_host =  args[++i];
             continue;
@@ -263,6 +266,12 @@ Options argparse(int argc, char* argv[]) {
         options.m_args.push_back(args[i]);
     // std::copy(argv, argv + argc, std::ostream_iterator<char *>(std::cout, "\n"));
     return options;
+}
+
+void display_help() {
+    std::stringstream ss;
+    ss << "Usage: \n\t" << "cephsumclient [-h] [-p] [-h] [-s] [-d] --mode <mode> [--action <inget ] [--cksum <opts>]";
+    std::cout << ss.str() << std::endl;
 }
 
 int display_ping(rapidjson::Document & d) {
@@ -330,9 +339,10 @@ int display_stat(rapidjson::Document & d) {
 int main(int argc, char* argv[]) {
     Options opt = argparse(argc, argv);
 
-    // std::string path = opt.m_args.at(0);
-
-    // const std::string secret {"secret password"};
+    if (opt.m_wantsHelp) {
+        display_help();
+        return 0;
+    }
 
     int sock = 0, valread, client_fd;
     bool connected{false};
