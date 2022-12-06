@@ -1,7 +1,6 @@
 # Cephsum-client
 The client component of the cephsum server/client implmentation
 
-
 ## Usage
 ```
 Usage: 
@@ -28,4 +27,3 @@ The default destination is:
 ```
 /usr/local/bin/cephsumclient
 ```
-
