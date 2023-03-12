@@ -1,0 +1,17 @@
+---
+on: [push]
+
+jobs:
+  build:
+    name: Builder
+    runs-on: ubuntu-latest
+    container: centos:7
+
+  steps:
+    - uses: actions/checkout@v2
+    - run: |
+       sudo yum install -y devtoolset-9
+       source /opt/rh/devtoolset-9/enable
+       cd build
+       cmake3 ../
+       make package
