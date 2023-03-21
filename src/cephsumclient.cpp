@@ -235,12 +235,27 @@ Options argparse(int argc, char* argv[]) {
             else if (mode == "ping")   options.m_emode = Options::PING;
             else if (mode == "health") options.m_emode = Options::HEALTH;            
             else if (mode == "wait")   options.m_emode = Options::WAIT;
-
+            else {
+                std::cout << "Invalid mode provided; choose one of {cksum,stat,ping,health}" << std::endl;
+                throw std::runtime_error("Invalid input!");
+            }
             continue;
         }
 
         if ( (args[i] == "-a") || (args[i] == "--action") ){
-            options.m_action = args[++i];
+            std::string action = args[++i];
+            const std::vector<std::string> allowed_strings {"inget","fileonly","metaonly"};
+            bool found_action {false};
+            for (const auto & a: allowed_strings) {
+                if (action != a) continue;
+                found_action = true;
+                break;
+            }
+            if (!found_action) {
+                std::cerr << "Invalid action provided; choose one of {inget,fileonly,metaonly}" << std::endl;
+                exit(1);
+            }
+            options.m_action = action;
             continue;
         }
         if ( (args[i] == "-C") || (args[i] == "--cksum") ){
@@ -248,10 +263,6 @@ Options argparse(int argc, char* argv[]) {
             continue;
         }
 
-        // if ((args[i] == "--port") ){
-        //     options.m_port =  stoi(args[++i]);
-        //     continue;
-        // }
         if ((args[i] == "--host") ){
             options.m_host =  args[++i];
             continue;
@@ -270,7 +281,16 @@ Options argparse(int argc, char* argv[]) {
 
 void display_help() {
     std::stringstream ss;
-    ss << "Usage: \n\t" << "cephsumclient [-h] [-p] [-h] [-s] [-d] --mode <mode> [--action <inget ] [--cksum <opts>]";
+    ss << "Usage: \n\t" << "cephsumclient [-h] [-p] [--host] [-s] [-d] --mode <mode> [--action <inget ] [--cksum <opts>]";
+    ss << "\n\t\t -h | --help   : display this help and exit";
+    ss << "\n\t\t -d| --verbose : extra logging info";
+    ss << "\n\t\t -p | --port   : port number to connect to";
+    ss << "\n\t\t --host        : host to connect to";
+    ss << "\n\t\t -m| --mode    : what mode to run: cksum,stat,ping,health";
+    ss << "\n\t\t -a| --action  : For cksum, which action to perform: inget,fileonly,metaonly";
+    ss << "\n\t\t -C| --cksum   : Additional checksum options; see XRootD documentation for details";
+    ss << "\n\t\t -s| --secrets : location of the secrets file with the authorization string";
+    
     std::cout << ss.str() << std::endl;
 }
 
