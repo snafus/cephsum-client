@@ -20,12 +20,12 @@ endif()
 
 include_directories(${RAPIDJSON_INCLUDE_DIR})
 
-add_executable(cephsumclient src/cephsumclient.cpp )
+add_executable(cephsumclient src/cephsumclient.cpp src/auth.cpp src/messages.cpp src/options.cpp src/display.cpp)
 target_link_libraries(cephsumclient PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 add_dependencies(cephsumclient rapidjson)
 install(TARGETS cephsumclient RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
 
-set(VERSION "0.0.2")
+set(VERSION "0.0.3")
 set(CPACK_PACKAGE_VERSION ${VERSION})
 set(CPACK_GENERATOR "RPM")
 set(CPACK_PACKAGE_NAME "cephserve-client")
