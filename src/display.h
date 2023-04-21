@@ -10,9 +10,9 @@ void display_help();
 int display_ping  (rapidjson::Document & d);
 int display_wait  (rapidjson::Document & d);
 int display_health(rapidjson::Document & d);
-int display_cksum (rapidjson::Document & d);
+int display_cksum (rapidjson::Document & r, rapidjson::Document & d);
 int display_stat  (rapidjson::Document & d);
 
-int presentResults(const Options& opt, rapidjson::Document &response);
+int presentResults(const Options& opt, rapidjson::Document & request, rapidjson::Document &response);
 
 #endif

@@ -6,6 +6,8 @@
 #include <utility>
 #include <algorithm>
 
+#include "logging.h"
+
 Options argparse(int argc, char* argv[]) {
     if (argc > 64) {
         throw std::runtime_error("Too many input parameters!");
@@ -59,7 +61,7 @@ Options argparse(int argc, char* argv[]) {
                 break;
             }
             if (!found_action) {
-                std::cerr << "Invalid action provided; choose one of {inget,fileonly,metaonly}" << std::endl;
+                CERR("Invalid action provided; choose one of {inget,fileonly,metaonly}");
                 exit(1);
             }
             options.m_action = action;
