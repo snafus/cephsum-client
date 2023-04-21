@@ -27,6 +27,7 @@
 #include "messages.h"
 #include "options.h"
 #include "display.h"
+#include "logging.h"
 
 
 int main(int argc, char* argv[]) {
@@ -40,20 +41,20 @@ int main(int argc, char* argv[]) {
 
     // read the secrets in and check we did
     if (!read_secrets(opt.m_secretsFile, opt.m_authkey) ){
-        std::cerr << "Error reading in the secrets file" << std::endl;
+        CERR("Error reading in the secrets file");
         return EINVAL;
     }
 
     // attempt to open a connection to the server, and respond to the challenge
     if (opt.m_verbose) {
-        std::clog << "Attempting to connect to " 
-                  << opt.m_host << ":" << opt.m_port << std::endl;
+        CLOG("Attempting to connect to " 
+                  << opt.m_host << ":" << opt.m_port);
     }
     int sock = 0, valread, client_fd;
     bool connected{false};
     for (size_t attempt=0; attempt<5; ++attempt) {
         if (!connect(opt.m_host, opt.m_port, sock, client_fd)) {
-            std::cerr  << "Unable to connect" << std::endl;
+            CERR("Unable to connect");
             usleep(1000000*(1+attempt));
             continue;
         }
@@ -66,15 +67,15 @@ int main(int argc, char* argv[]) {
         break;
     }
     if (!connected) {
-        std::cerr << "Could not connect / authenticate to host" 
-                  << opt.m_host << ":" << opt.m_port << std::endl;
+        CERR("Could not connect / authenticate to host" 
+                  << opt.m_host << ":" << opt.m_port);
         return EIO; 
     }
 
     // create the message to send
     rapidjson::Document msg;
     if (!create_message(opt, msg)) {
-        std::cerr << "Could not create the message to send" << std::endl;
+        CERR("Could not create the message to send");
         close(client_fd);
         return EINVAL;
     }
@@ -85,7 +86,7 @@ int main(int argc, char* argv[]) {
     rapidjson::Document response;
     while (true) { 
         if (! msg_recv(sock, response) ) {
-            std::cerr << "Error recieving response" << std::endl;
+            CERR("Error recieving response");
             close(client_fd);
             return EINVAL;
         }
@@ -95,7 +96,7 @@ int main(int argc, char* argv[]) {
     close(client_fd);
 
     // present the results and get the return code
-    int rc = presentResults(opt, response);
+    int rc = presentResults(opt, msg, response);
     return rc;
 }
 
