@@ -6,6 +6,8 @@
 #include <utility>
 #include <algorithm>
 
+#include "logging.h"
+
 Options argparse(int argc, char* argv[]) {
     if (argc > 64) {
         throw std::runtime_error("Too many input parameters!");
@@ -44,7 +46,7 @@ Options argparse(int argc, char* argv[]) {
             else if (mode == "wait")   options.m_emode = Options::WAIT;
             else {
                 std::cout << "Invalid mode provided; choose one of {cksum,stat,ping,health}" << std::endl;
-                throw std::runtime_error("Invalid input!");
+                exit(EINVAL);
             }
             continue;
         }
@@ -59,7 +61,7 @@ Options argparse(int argc, char* argv[]) {
                 break;
             }
             if (!found_action) {
-                std::cerr << "Invalid action provided; choose one of {inget,fileonly,metaonly}" << std::endl;
+                CERR("Invalid action provided; choose one of {inget,fileonly,metaonly}");
                 exit(1);
             }
             options.m_action = action;

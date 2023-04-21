@@ -14,6 +14,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
+#include "logging.h"
 
 void display_help() {
     std::stringstream ss;
@@ -52,7 +53,7 @@ int display_wait(rapidjson::Document & d) {
 
 int display_health(rapidjson::Document & d) {
     if (d["status"] != 0) {
-        std::cerr << "Error with wait" << std::endl;
+        CERR("Error with wait");
         return 1;
     }
     auto & dd = d["details"];
@@ -64,13 +65,21 @@ int display_health(rapidjson::Document & d) {
     return 0;
 }
 
-int display_cksum(rapidjson::Document & d) {
+int display_cksum(rapidjson::Document & r, rapidjson::Document & d) {
     auto & dd = d["details"];
     int status = d["status"].GetInt();
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    d.Accept(writer);
+    rapidjson::StringBuffer inbuffer;
+    rapidjson::Writer<rapidjson::StringBuffer> inwriter(inbuffer);
+    r.Accept(inwriter);
+
     if (status == 0) {
+        CLOG("Checksum: " << inbuffer.GetString() << " " << buffer.GetString());
         std::cout << dd["digest"].GetString() << std::endl;
     } else {
-        std::cerr << dd["error"].GetString() << std::endl;
+        CERR(dd["error"].GetString());
     }
     return status;
 }
@@ -85,13 +94,13 @@ int display_stat(rapidjson::Document & d) {
         std::cout << buffer.GetString() << std::endl;
     } else {
         // dd["error"].Accept(writer);
-        std::cerr << dd["error"].GetString() << std::endl;
+        CERR(dd["error"].GetString());
     }
     return status;
 }
 
 
-int presentResults(const Options& opt, rapidjson::Document &response) {
+int presentResults(const Options& opt, rapidjson::Document &request, rapidjson::Document &response) {
 
     switch (opt.m_emode) {
         case Options::MODE::PING:
@@ -101,11 +110,11 @@ int presentResults(const Options& opt, rapidjson::Document &response) {
         case Options::MODE::HEALTH:
             return display_health(response);
         case Options::MODE::CKSUM:
-            return display_cksum(response);
+            return display_cksum(request, response);
         case Options::MODE::STAT:
             return display_stat(response);
         default:
-            std::cerr << "Invalid mode specified at printout" << std::endl;
+            CERR("Invalid mode specified at printout");
             return EINVAL;
     }
 

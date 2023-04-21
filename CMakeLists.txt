@@ -25,7 +25,7 @@ target_link_libraries(cephsumclient PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 add_dependencies(cephsumclient rapidjson)
 install(TARGETS cephsumclient RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
 
-set(VERSION "0.0.3")
+set(VERSION "0.9.2")
 set(CPACK_PACKAGE_VERSION ${VERSION})
 set(CPACK_GENERATOR "RPM")
 set(CPACK_PACKAGE_NAME "cephserve-client")

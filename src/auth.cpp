@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "logging.h"
+
 bool answer_challenge(int sock, const std::string & authkey) {
     // message vars
     const int   MESSAGE_LENGTH {20};
@@ -31,7 +33,7 @@ bool answer_challenge(int sock, const std::string & authkey) {
         valread = read(sock, buffer, 1024);
         if (valread > 0) break; // message recieved
         else if (valread < 0) {
-            std::cerr << "Read Error at Auth: " << valread <<std::endl;
+            CERR("Read Error at Auth: " << valread);
             return false;
         }
         // otherwise, just loop around until success or max attempts ... 
@@ -43,12 +45,12 @@ bool answer_challenge(int sock, const std::string & authkey) {
     // result = HMAC(EVP_md5(), authkey.c_str(), authkey.size(), data, datalen, result, &resultlen);
     ssize_t rc = send(sock, result, resultlen, 0);
     if (rc < 0) {
-        std::cerr << "Read Error at Challenge send: " << valread <<std::endl;
+        CERR("Read Error at Challenge send: " << valread);
     }
 
     valread = read(sock, buffer, CHALLENGE_LENGTH);
     if (valread <= 0) {
-            std::cerr << "Read Error at Challenge welcome: " << valread <<std::endl;
+            CERR("Read Error at Challenge welcome: " << valread);
             return false;
     }
 
@@ -56,10 +58,8 @@ bool answer_challenge(int sock, const std::string & authkey) {
 
     // free(data);
     if (resp != "#WELCOME#") {
-        std::cerr << "Authentication failure: " << resp << std::endl;
+        CERR("Authentication failure: " << resp);
         return false;
-    } else {
-        // std::clog << "Connected ... " << std::endl;
     }
     return true;
 }

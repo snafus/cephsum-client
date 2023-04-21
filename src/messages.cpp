@@ -10,7 +10,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
-
+#include "logging.h"
 
 
 bool msg_send(int sock, rapidjson::Document & d) {
@@ -31,7 +31,7 @@ bool msg_send(int sock, rapidjson::Document & d) {
     // std::clog << msg << std::endl;
     ssize_t rc = send(sock, data, mlen+4, 0);
     if (rc < 0) {
-        std::cerr << "Error on send: " << rc << std::endl;
+        CERR("Error on send: " << rc);
     }
     free(data);
     return true;
@@ -45,7 +45,7 @@ bool msg_recv(int sock, rapidjson::Document & d) {
     // get the size of the message
     valread = read(sock, buffer, 4);
     if (valread == 0) {
-        std::clog << "0 bytes read" << std::endl;
+        CLOG("0 bytes read");
         return false;
     }
     int mrecv = 0;
@@ -57,7 +57,7 @@ bool msg_recv(int sock, rapidjson::Document & d) {
     // read the message
     valread = read(sock, buffer, mrecv);
     if (valread == 0) {
-        std::clog << "0 bytes read" << std::endl;
+        CLOG("0 bytes read");
         return false;
     }
 
@@ -78,19 +78,19 @@ bool msg_recv(int sock, rapidjson::Document & d) {
 bool connect(const std::string & host, int port, int& sock, int& client_fd) {
     struct sockaddr_in serv_addr;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        std::cerr << "Socket creation error" << std::endl;
+        CERR("Socket creation error");
         return false;
     }
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
     
     if (inet_pton(AF_INET, host.c_str(), &serv_addr.sin_addr)  <= 0) {
-        std::cerr << "Invalid address/ Address not supported" << std::endl;
+        CERR("Invalid address/ Address not supported");
         return false;
     }
     if ((client_fd = connect(sock, (struct sockaddr*)&serv_addr,
                    sizeof(serv_addr))) < 0) {
-        std::cerr << "Connection Failed" << std::endl;
+        CERR("Connection Failed");
         return false;
     }
 
@@ -100,11 +100,11 @@ bool connect(const std::string & host, int port, int& sock, int& client_fd) {
 
     if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout,
                 sizeof timeout) < 0)
-        printf("setsockopt failed\n");
+        CERR("setsockopt failed");
 
     if (setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, &timeout,
                 sizeof timeout) < 0)
-        printf("setsockopt failed\n");
+        CERR("setsockopt failed");
 
     return true;
 }
@@ -119,12 +119,22 @@ bool create_message(const Options& opt, rapidjson::Document & msg) {
     switch (opt.m_emode) {
             case Options::MODE::STAT:
             {
+                if (!opt.m_args.size() or !opt.m_args.at(0).size()) {
+                    CERR("Invalid path specified");
+                    return EINVAL;
+                }
                 rapidjson::Value v_path;
                 v_path.SetString   (opt.m_args.at(0).c_str(), opt.m_args.at(0).size(), msg.GetAllocator());
                 msg.AddMember("path",    v_path,    msg.GetAllocator());
+                break;
             }
         case Options::MODE::CKSUM:
             {
+            if (!opt.m_args.size() or !opt.m_args.at(0).size()) {
+                CERR("Invalid path specified");
+                return EINVAL;
+            }
+
             rapidjson::Value v_path, v_action, v_algtype;
             v_path.SetString   (opt.m_args.at(0).c_str(), opt.m_args.at(0).size(), msg.GetAllocator());
             v_action.SetString (opt.m_action.c_str(), opt.m_action.size(),  msg.GetAllocator());
