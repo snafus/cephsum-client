@@ -90,10 +90,25 @@ int main(int argc, char* argv[]) {
             close(client_fd);
             return EINVAL;
         }
+        if (opt.m_verbose) {
+            std::clog << ".";
+        }
         if (response["msg"] != "alive") break;
     }
-
+    if (opt.m_verbose) {
+        std::clog << std::endl;
+    }
     close(client_fd);
+
+    int status = response["status"].GetInt();
+    if (status != 0) {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        response.Accept(writer);
+        CERR("Server returned an error: " << buffer.GetString());
+        return 1; 
+    }
+
 
     // present the results and get the return code
     int rc = presentResults(opt, msg, response);
